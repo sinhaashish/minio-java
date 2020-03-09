@@ -66,6 +66,7 @@ import io.minio.messages.Prefix;
 import io.minio.messages.Upload;
 import io.minio.messages.NotificationConfiguration;
 import io.minio.messages.SelectObjectContentRequest;
+import io.minio.messages.ServerSideEncryptionConfiguration;
 import io.minio.org.apache.commons.validator.routines.InetAddressValidator;
 
 import io.minio.messages.ObjectRetentionConfiguration;
@@ -4082,6 +4083,90 @@ public class MinioClient {
     return result;
   }
   
+
+  /**
+   * Fetches bucket encryption configuration.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code
+   * ServerSideEncryptionConfiguration sseConfiguration = minioClient.getBucketEncryption("my-bucketname");
+   * System.out.println("Bucket Encryption" + sseConfiguration); }</pre>
+   *
+   * @param bucketName Bucket name.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public ServerSideEncryptionConfiguration getBucketEncryption(String bucketName)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidResponseException {
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("encryption", "");
+
+    HttpResponse response = executeGet(bucketName, null, null, queryParamMap);
+    ServerSideEncryptionConfiguration result = new ServerSideEncryptionConfiguration();
+    try {
+      result.parseXml(response.body().charStream());
+    } finally {
+      response.body().close();
+    }
+    return result;
+  }
+
+  /**
+   * Fetches bucket encryption configuration.
+   *
+   * </p><b>Example:</b><br>
+   * <pre>{@code
+   *  minioClient.deleteBucketEncryption("my-bucketname");
+   * System.out.println("Bucket Encryption " + serverSideEncryptionConfiguration); }</pre>
+   *
+   * @param bucketName Bucket name.
+   *
+   * @throws InvalidBucketNameException  upon invalid bucket name is given
+   * @throws NoSuchAlgorithmException
+   *           upon requested algorithm was not found during signature calculation
+   * @throws InsufficientDataException  upon getting EOFException while reading given
+   *           InputStream even before reading given length
+   * @throws IOException                 upon connection error
+   * @throws InvalidKeyException
+   *           upon an invalid access key or secret key
+   * @throws NoResponseException         upon no response from server
+   * @throws XmlPullParserException      upon parsing response xml
+   * @throws ErrorResponseException      upon unsuccessful execution
+   * @throws InternalException           upon internal library error
+   * @throws InvalidResponseException    upon a non-xml response from server
+   */
+  public void deleteBucketEncryption(String bucketName)
+    throws InvalidBucketNameException, NoSuchAlgorithmException, InsufficientDataException, IOException,
+           InvalidKeyException, NoResponseException, XmlPullParserException, ErrorResponseException,
+           InternalException, InvalidResponseException {
+
+    Map<String, String> queryParamMap = new HashMap<>();
+    queryParamMap.put("encryption", "");
+    try {
+      executeDelete(bucketName, null, queryParamMap);
+    } catch (ErrorResponseException e) {
+      if (e.errorResponse().errorCode() != ErrorCode.NO_SUCH_LIFECYCLE_CONFIGURATION) {
+        throw e;
+      }
+  }
+
+
+
   /**
    * Enables object legal hold on an object.
    *
